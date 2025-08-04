@@ -1,0 +1,173 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File List</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            margin-top: 2rem;
+            max-width: 1200px;
+        }
+        .table {
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        .table th, .table td {
+            vertical-align: middle;
+        }
+        .btn-sm {
+            padding: 0.25rem 0.5rem;
+        }
+        .navbar-brand {
+            font-weight: bold;
+        }
+        .file-size {
+            color: #6c757d;
+        }
+        .file-icon, .folder-icon {
+            margin-right: 0.5rem;
+            font-size: 1.9rem;
+        }
+        .file-link, .folder-link {
+            text-decoration: none;
+            color: #212529;
+        }
+        .file-link:hover, .folder-link:hover {
+            text-decoration: underline;
+        }
+        .breadcrumb {
+            background-color: transparent;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'file_list' %}">File Manager</a>
+            <div class="navbar-nav">
+                {% if user.is_authenticated %}
+                    <span class="nav-link">Welcome, {{ user.username }}</span>
+                    <a class="nav-link" href="{% if current_folder %}{% url 'upload_file_folder' current_folder.id %}{% else %}{% url 'upload_file' %}{% endif %}">Upload File</a>
+                    <a class="nav-link" href="{% if current_folder %}{% url 'create_folder_in' current_folder.id %}{% else %}{% url 'create_folder' %}{% endif %}">Create Folder</a>
+                    <a class="nav-link active" href="{% url 'file_list' %}">View Files</a>
+                {% else %}
+                    <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
+                    <a class="nav-link" href="{% url 'login' %}">Login</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container">
+        <h2 class="my-4">
+            {% if current_folder %}
+                Files in {{ current_folder.name }}
+            {% else %}
+                Uploaded Files
+            {% endif %}
+        </h2>
+
+        {% if current_folder %}
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="{% url 'file_list' %}">Root</a></li>
+                    {% for parent in current_folder.get_parents reversed %}
+                        <li class="breadcrumb-item"><a href="{% url 'file_list_folder' parent.id %}">{{ parent.name }}</a></li>
+                    {% endfor %}
+                    <li class="breadcrumb-item active" aria-current="page">{{ current_folder.name }}</li>
+                </ol>
+            </nav>
+        {% endif %}
+
+        {% if messages %}
+            <div class="alert alert-info" role="alert">
+                {% for message in messages %}
+                    {{ message }}
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+            <div class="mb-3">
+                <a href="{% if current_folder %}{% url 'create_folder_in' current_folder.id %}{% else %}{% url 'create_folder' %}{% endif %}" class="btn btn-success btn-sm">Create New Folder</a>
+                <a href="{% if current_folder %}{% url 'upload_file_folder' current_folder.id %}{% else %}{% url 'upload_file' %}{% endif %}" class="btn btn-success btn-sm">Upload New File</a>
+            </div>
+
+            {% if folders or files %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead class="table-dark">
+                            <tr>
+                                <th scope="col">Name</th>
+                                <th scope="col">Size</th>
+                                <th scope="col">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for folder in folders %}
+                                <tr>
+                                   
+                                    <td>
+                                        <a href="{% url 'file_list_folder' folder.id %}" class="folder-link">
+                                            <i class="bi bi-folder folder-icon text-warning"></i>
+                                            {{ folder.name }}
+                                        </a>
+                                    </td>
+                                    <td>-</td>
+                                    <td>-</td>
+                                </tr>
+                            {% endfor %}
+                            {% for file in files %}
+                                <tr>
+                                    <td>
+                                        <a href="{{ file.file.url }}" class="file-link" target="_blank">
+                                            {% if file.extension == 'pdf' %}
+                                                <i class="bi bi-file-pdf file-icon text-danger"></i>
+                                            {% elif file.extension == 'jpg' or file.extension == 'jpeg' or file.extension == 'png' or file.extension == 'gif' %}
+                                                <i class="bi bi-file-image file-icon text-primary"></i>
+                                            {% elif file.extension == 'txt' %}
+                                                <i class="bi bi-file-text file-icon text-secondary"></i>
+                                            {% elif file.extension == 'doc' or file.extension == 'docx' %}
+                                                <i class="bi bi-file-word file-icon text-primary"></i>
+                                            {% elif file.extension == 'xls' or file.extension == 'xlsx' %}
+                                                <i class="bi bi-file-excel file-icon text-success"></i>
+                                            {% elif file.extension == 'zip' or file.extension == 'rar' %}
+                                                <i class="bi bi-file-zip file-icon text-warning"></i>
+                                            {% else %}
+                                                <i class="bi bi-file-earmark file-icon text-muted"></i>
+                                            {% endif %}
+                                            {{ file.file_name }}
+                                        </a>
+                                    </td>
+                                    <td class="file-size">
+                                            {{ file.file_size }} bytes
+                                    </td>
+                                    <td>
+                                        <a href="{{ file.file.url }}" class="btn btn-primary btn-sm" download>Download</a>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="alert alert-warning" role="alert">
+                    No files or folders yet.
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="alert alert-warning" role="alert">
+                Please <a href="{% url 'login' %}">login</a> to view your files and folders.
+            </div>
+        {% endif %}
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
