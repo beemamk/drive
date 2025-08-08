@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -51,15 +50,9 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'file_list' %}">File Manager</a>
             <div class="navbar-nav">
-                {% if user.is_authenticated %}
-                    <span class="nav-link">Welcome, {{ user.username }}</span>
-                    <a class="nav-link" href="{% if current_folder %}{% url 'upload_file_folder' current_folder.id %}{% else %}{% url 'upload_file' %}{% endif %}">Upload File</a>
-                    <a class="nav-link" href="{% if current_folder %}{% url 'create_folder_in' current_folder.id %}{% else %}{% url 'create_folder' %}{% endif %}">Create Folder</a>
-                    <a class="nav-link active" href="{% url 'file_list' %}">View Files</a>
-                {% else %}
-                    <a class="nav-link" href="{% url 'signup' %}">Sign Up</a>
-                    <a class="nav-link" href="{% url 'login' %}">Login</a>
-                {% endif %}
+                <a class="nav-link" href="{% if current_folder %}{% url 'upload_file_folder' current_folder.id %}{% else %}{% url 'upload_file' %}{% endif %}">Upload File</a>
+                <a class="nav-link" href="{% if current_folder %}{% url 'create_folder_in' current_folder.id %}{% else %}{% url 'create_folder' %}{% endif %}">Create Folder</a>
+                <a class="nav-link active" href="{% url 'file_list' %}">View Files</a>
             </div>
         </div>
     </nav>
@@ -93,77 +86,70 @@
             </div>
         {% endif %}
 
-        {% if user.is_authenticated %}
-            <div class="mb-3">
-                <a href="{% if current_folder %}{% url 'create_folder_in' current_folder.id %}{% else %}{% url 'create_folder' %}{% endif %}" class="btn btn-success btn-sm">Create New Folder</a>
-                <a href="{% if current_folder %}{% url 'upload_file_folder' current_folder.id %}{% else %}{% url 'upload_file' %}{% endif %}" class="btn btn-success btn-sm">Upload New File</a>
-            </div>
+        <div class="mb-3">
+            <a href="{% if current_folder %}{% url 'create_folder_in' current_folder.id %}{% else %}{% url 'create_folder' %}{% endif %}" class="btn btn-success btn-sm">Create New Folder</a>
+            <a href="{% if current_folder %}{% url 'upload_file_folder' current_folder.id %}{% else %}{% url 'upload_file' %}{% endif %}" class="btn btn-success btn-sm">Upload New File</a>
+        </div>
 
-            {% if folders or files %}
-                <div class="table-responsive">
-                    <table class="table table-striped table-hover">
-                        <thead class="table-dark">
+        {% if folders or files %}
+            <div class="table-responsive">
+                <table class="table table-striped table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Size</th>
+                            <th scope="col">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for folder in folders %}
                             <tr>
-                                <th scope="col">Name</th>
-                                <th scope="col">Size</th>
-                                <th scope="col">Action</th>
+                                <td>
+                                    <a href="{% url 'file_list_folder' folder.id %}" class="folder-link">
+                                        <i class="bi bi-folder folder-icon text-warning"></i>
+                                        {{ folder.name }}
+                                    </a>
+                                </td>
+                                <td>-</td>
+                                <td>-</td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% for folder in folders %}
-                                <tr>
-                                   
-                                    <td>
-                                        <a href="{% url 'file_list_folder' folder.id %}" class="folder-link">
-                                            <i class="bi bi-folder folder-icon text-warning"></i>
-                                            {{ folder.name }}
-                                        </a>
-                                    </td>
-                                    <td>-</td>
-                                    <td>-</td>
-                                </tr>
-                            {% endfor %}
-                            {% for file in files %}
-                                <tr>
-                                    <td>
-                                        <a href="{{ file.file.url }}" class="file-link" target="_blank">
-                                            {% if file.extension == 'pdf' %}
-                                                <i class="bi bi-file-pdf file-icon text-danger"></i>
-                                            {% elif file.extension == 'jpg' or file.extension == 'jpeg' or file.extension == 'png' or file.extension == 'gif' %}
-                                                <i class="bi bi-file-image file-icon text-primary"></i>
-                                            {% elif file.extension == 'txt' %}
-                                                <i class="bi bi-file-text file-icon text-secondary"></i>
-                                            {% elif file.extension == 'doc' or file.extension == 'docx' %}
-                                                <i class="bi bi-file-word file-icon text-primary"></i>
-                                            {% elif file.extension == 'xls' or file.extension == 'xlsx' %}
-                                                <i class="bi bi-file-excel file-icon text-success"></i>
-                                            {% elif file.extension == 'zip' or file.extension == 'rar' %}
-                                                <i class="bi bi-file-zip file-icon text-warning"></i>
-                                            {% else %}
-                                                <i class="bi bi-file-earmark file-icon text-muted"></i>
-                                            {% endif %}
-                                            {{ file.file_name }}
-                                        </a>
-                                    </td>
-                                    <td class="file-size">
-                                            {{ file.file_size }} bytes
-                                    </td>
-                                    <td>
-                                        <a href="{{ file.file.url }}" class="btn btn-primary btn-sm" download>Download</a>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
-            {% else %}
-                <div class="alert alert-warning" role="alert">
-                    No files or folders yet.
-                </div>
-            {% endif %}
+                        {% endfor %}
+                        {% for file in files %}
+                            <tr>
+                                <td>
+                                    <a href="{{ file.file.url }}" class="file-link" target="_blank">
+                                        {% if file.file_type == 'pdf' %}
+                                            <i class="bi bi-file-pdf file-icon text-danger"></i>
+                                        {% elif file.file_type == 'jpg' or file.file_type == 'jpeg' or file.file_type == 'png' or file.file_type == 'gif' %}
+                                            <i class="bi bi-file-image file-icon text-primary"></i>
+                                        {% elif file.file_type == 'txt' %}
+                                            <i class="bi bi-file-text file-icon text-secondary"></i>
+                                        {% elif file.file_type == 'doc' or file.file_type == 'docx' %}
+                                            <i class="bi bi-file-word file-icon text-primary"></i>
+                                        {% elif file.file_type == 'xls' or file.file_type == 'xlsx' %}
+                                            <i class="bi bi-file-excel file-icon text-success"></i>
+                                        {% elif file.file_type == 'zip' or file.file_type == 'rar' %}
+                                            <i class="bi bi-file-zip file-icon text-warning"></i>
+                                        {% else %}
+                                            <i class="bi bi-file-earmark file-icon text-muted"></i>
+                                        {% endif %}
+                                        {{ file.file_name }}
+                                    </a>
+                                </td>
+                                <td class="file-size">
+                                    {{ file.file_size }} bytes
+                                </td>
+                                <td>
+                                    <a href="{{ file.file.url }}" class="btn btn-primary btn-sm" download>Download</a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         {% else %}
             <div class="alert alert-warning" role="alert">
-                Please <a href="{% url 'login' %}">login</a> to view your files and folders.
+                No files or folders yet.
             </div>
         {% endif %}
     </div>
